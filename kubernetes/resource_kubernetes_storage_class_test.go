@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubernetes "k8s.io/client-go/kubernetes"
-	api "k8s.io/client-go/pkg/apis/storage/v1"
+	api "k8s.io/api/storage/v1"
 )
 
 func TestAccKubernetesStorageClass_basic(t *testing.T) {

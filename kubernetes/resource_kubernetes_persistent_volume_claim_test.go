@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubernetes "k8s.io/client-go/kubernetes"
-	api "k8s.io/client-go/pkg/api/v1"
-	storageapi "k8s.io/client-go/pkg/apis/storage/v1"
+	api "k8s.io/api/core/v1"
+	storageapi "k8s.io/api/storage/v1"
 )
 
 func TestAccKubernetesPersistentVolumeClaim_basic(t *testing.T) {
