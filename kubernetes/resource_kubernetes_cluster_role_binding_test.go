@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	api "k8s.io/kubernetes/pkg/apis/rbac/v1"
-	kubernetes "k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
+	api "k8s.io/api/rbac/v1"
+	kubernetes "k8s.io/client-go/kubernetes"
 )
 
 func TestAccKubernetesClusterRoleBinding(t *testing.T) {

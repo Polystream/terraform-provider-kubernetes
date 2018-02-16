@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform/helper/schema"
-	api "k8s.io/kubernetes/pkg/apis/rbac/v1"
+	api "k8s.io/api/rbac/v1"
 )
 
 func expandRBACRoleRef(in interface{}) api.RoleRef {
@@ -51,6 +51,34 @@ func expandRBACSubjects(in []interface{}) []api.Subject {
 	return subjects
 }
 
+func expandRBACRules(in []interface{}) []api.PolicyRule {
+	if len(in) == 0 || in[0] == nil {
+		return []api.PolicyRule{}
+	}
+	rules := []api.PolicyRule{}
+	for i := range in {
+		rule := api.PolicyRule{}
+		m := in[i].(map[string]interface{})
+		if v, ok := m["api_groups"]; ok {
+			rule.APIGroups = schemaSetToStringArray(v.(*schema.Set))
+		}
+		if v, ok := m["resources"]; ok {
+			rule.Resources = schemaSetToStringArray(v.(*schema.Set))
+		}
+		if v, ok := m["verbs"]; ok {
+			rule.Verbs = schemaSetToStringArray(v.(*schema.Set))
+		}
+		if v, ok := m["resource_names"]; ok {
+			rule.ResourceNames = schemaSetToStringArray(v.(*schema.Set))
+		}
+		if v, ok := m["non_resource_urls"]; ok {
+			rule.NonResourceURLs = schemaSetToStringArray(v.(*schema.Set))
+		}
+		rules = append(rules, rule)
+	}
+	return rules
+}
+
 func flattenRBACRoleRef(in api.RoleRef) interface{} {
 	att := make(map[string]interface{})
 
@@ -78,6 +106,19 @@ func flattenRBACSubjects(in []api.Subject) []interface{} {
 	return att
 }
 
+func flattenRBACRules(in []api.PolicyRule) []interface{} {
+	att := make([]interface{}, len(in), len(in))
+	for _, n := range in {
+		m := make(map[string]interface{})
+		m["api_groups"] = n.APIGroups
+		m["resources"] = n.Resources
+		m["verbs"] = n.Verbs
+		m["resource_names"] = n.ResourceNames
+		m["non_resource_urls"] = n.NonResourceURLs
+	}
+	return att
+}
+
 // Patch Ops
 func patchRbacSubject(d *schema.ResourceData) PatchOperations {
 	ops := make([]PatchOperation, 0, 0)
@@ -87,6 +128,21 @@ func patchRbacSubject(d *schema.ResourceData) PatchOperations {
 		for i, v := range subjects {
 			ops = append(ops, &ReplaceOperation{
 				Path:  "/subjects/" + strconv.Itoa(i),
+				Value: v,
+			})
+		}
+	}
+	return ops
+}
+
+func patchRbacRule(d *schema.ResourceData) PatchOperations {
+	ops := make([]PatchOperation, 0, 0)
+
+	if d.HasChange("rule") {
+		rules := expandRBACRules(d.Get("rule").([]interface{}))
+		for i, v := range rules {
+			ops = append(ops, &ReplaceOperation{
+				Path:  "/rules/" + strconv.Itoa(i),
 				Value: v,
 			})
 		}

@@ -8,8 +8,9 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	pkgApi "k8s.io/apimachinery/pkg/types"
-	api "k8s.io/kubernetes/pkg/apis/rbac/v1"
-	kubernetes "k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
+	v1 "k8s.io/api/rbac/v1"
+	//kubernetes "k8s.io/kubernetes/pkg/client/clientset_generated/clientset"
+	kubernetes "k8s.io/client-go/kubernetes"
 )
 
 func resourceKubernetesClusterRoleBinding() *schema.Resource {
@@ -51,7 +52,7 @@ func resourceKubernetesClusterRoleBindingCreate(d *schema.ResourceData, meta int
 	conn := meta.(*kubernetes.Clientset)
 
 	metadata := expandMetadata(d.Get("metadata").([]interface{}))
-	binding := &api.ClusterRoleBinding{
+	binding := &v1.ClusterRoleBinding{
 		ObjectMeta: metadata,
 		RoleRef:    expandRBACRoleRef(d.Get("role_ref").(interface{})),
 		Subjects:   expandRBACSubjects(d.Get("subject").([]interface{})),

@@ -52,3 +52,43 @@ func rbacSubjectSchema() map[string]*schema.Schema {
 		},
 	}
 }
+
+func rbacRoleSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"api_groups": {
+			Type:        schema.TypeSet,
+			Description: "APIGroups is the name of the APIGroup that contains the resources.  If multiple API groups are specified, any action requested against one of the enumerated resources in any API group will be allowed",
+			Elem:        &schema.Schema{Type: schema.TypeString},
+			Set:         schema.HashString,
+			Optional:    true,
+		},
+		"resources": {
+			Type:        schema.TypeSet,
+			Description: "A list of resources this rule applies to.  ResourceAll represents all resources",
+			Elem:        &schema.Schema{Type: schema.TypeString},
+			Set:         schema.HashString,
+			Optional:    true,
+		},
+		"verbs": {
+			Type:        schema.TypeSet,
+			Description: "A list of Verbs that apply to ALL the ResourceKinds and AttributeRestrictions contained in this rule.  VerbAll represents all kinds.",
+			Elem:        &schema.Schema{Type: schema.TypeString},
+			Set:         schema.HashString,
+			Required:    true,
+		},
+		"resource_names": {
+			Type:        schema.TypeSet,
+			Description: "An optional white list of names that the rule applies to.  An empty set means that everything is allowed",
+			Elem:        &schema.Schema{Type: schema.TypeString},
+			Set:         schema.HashString,
+			Optional:    true,
+		},
+		"non_resource_urls": {
+			Type:        schema.TypeSet,
+			Description: "NonResourceURLs is a set of partial urls that a user should have access to.  *s are allowed, but only as the full, final step in the path",
+			Elem:        &schema.Schema{Type: schema.TypeString},
+			Set:         schema.HashString,
+			Optional:    true,
+		},
+	}
+}

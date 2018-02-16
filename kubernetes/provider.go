@@ -123,6 +123,7 @@ func Provider() terraform.ResourceProvider {
 			"kubernetes_service_account":           resourceKubernetesServiceAccount(),
 			"kubernetes_storage_class":             resourceKubernetesStorageClass(),
 			"kubernetes_cluster_role_binding":      resourceKubernetesClusterRoleBinding(),
+			"kubernetes_cluster_role":              resourceKubernetesClusterRole(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
