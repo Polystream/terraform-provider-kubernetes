@@ -91,7 +91,7 @@ func flattenRBACRoleRef(in api.RoleRef) interface{} {
 }
 
 func flattenRBACSubjects(in []api.Subject) []interface{} {
-	att := make([]interface{}, len(in), len(in))
+	att := make([]interface{}, 0, len(in))
 	for _, n := range in {
 		m := make(map[string]interface{})
 		if n.APIGroup != "" {
@@ -102,19 +102,23 @@ func flattenRBACSubjects(in []api.Subject) []interface{} {
 		if n.Namespace != "" {
 			m["namespace"] = n.Namespace
 		}
+
+		att = append(att, m)
 	}
 	return att
 }
 
 func flattenRBACRules(in []api.PolicyRule) []interface{} {
-	att := make([]interface{}, len(in), len(in))
+	att := make([]interface{}, 0, len(in))
 	for _, n := range in {
 		m := make(map[string]interface{})
-		m["api_groups"] = n.APIGroups
-		m["resources"] = n.Resources
-		m["verbs"] = n.Verbs
-		m["resource_names"] = n.ResourceNames
-		m["non_resource_urls"] = n.NonResourceURLs
+		m["api_groups"] = newStringSet(schema.HashString, n.APIGroups)
+		m["resources"] = newStringSet(schema.HashString, n.Resources)
+		m["verbs"] = newStringSet(schema.HashString, n.Verbs)
+		m["resource_names"] = newStringSet(schema.HashString, n.ResourceNames)
+		m["non_resource_urls"] = newStringSet(schema.HashString, n.NonResourceURLs)
+
+		att = append(att, m)
 	}
 	return att
 }
