@@ -12,6 +12,14 @@ func podSpecFields(isUpdatable bool) map[string]*schema.Schema {
 			ValidateFunc: validatePositiveInteger,
 			Description:  "Optional duration in seconds the pod may be active on the node relative to StartTime before the system will actively try to mark it failed and kill associated containers. Value must be a positive integer.",
 		},
+		"init_container": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "",
+			Elem: &schema.Resource{
+				Schema: containerFields(isUpdatable),
+			},
+		},
 		"container": {
 			Type:        schema.TypeList,
 			Optional:    true,

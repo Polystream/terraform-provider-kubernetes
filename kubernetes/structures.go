@@ -181,6 +181,9 @@ func expandMapToResourceList(m map[string]interface{}) (api.ResourceList, error)
 			q := resource.NewQuantity(int64(v), resource.DecimalExponent)
 			value = *q
 		} else if v, ok := origValue.(string); ok {
+			if v == "" {
+				continue
+			}
 			var err error
 			value, err = resource.ParseQuantity(v)
 			if err != nil {

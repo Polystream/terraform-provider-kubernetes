@@ -137,6 +137,13 @@ func resourcesField() map[string]*schema.Schema {
 						ValidateFunc:     validateResourceQuantity,
 						DiffSuppressFunc: suppressEquivalentResourceQuantity,
 					},
+					"storage": {
+						Type:             schema.TypeString,
+						Optional:         true,
+						Computed:         true,
+						ValidateFunc:     validateResourceQuantity,
+						DiffSuppressFunc: suppressEquivalentResourceQuantity,
+					},
 				},
 			},
 		},

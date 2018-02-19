@@ -67,7 +67,7 @@ func expandVolumeClaimTemplate(in []interface{}) []v1.PersistentVolumeClaim {
 		if v, ok := m["metadata"]; ok {
 			claim.ObjectMeta = expandMetadata(v.([]interface{}))
 		}
-		if v, ok := m["sepc"]; ok {
+		if v, ok := m["spec"]; ok {
 			claim.Spec, _ = expandPersistentVolumeClaimSpec(v.([]interface{}))
 		}
 		claims = append(claims, claim)
@@ -81,7 +81,7 @@ func expandStatefulSetUpdateStrategy(in []interface{}) api.StatefulSetUpdateStra
 	}
 	strategy := api.StatefulSetUpdateStrategy{}
 	m := in[0].(map[string]interface{})
-	if v, ok := m["tyoe"]; ok {
+	if v, ok := m["type"]; ok {
 		strategy.Type = api.StatefulSetUpdateStrategyType(v.(string))
 	}
 	if v, ok := m["rolling_update"]; ok {
