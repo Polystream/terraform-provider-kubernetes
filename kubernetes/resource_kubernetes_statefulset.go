@@ -3,11 +3,14 @@ package kubernetes
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/resource"
 	"k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/api/apps/v1"
+	pkgApi "k8s.io/apimachinery/pkg/types"
 	kubernetes "k8s.io/client-go/kubernetes"
 )
 
@@ -28,6 +31,7 @@ func resourceKubernetesStatefulSet() *schema.Resource {
 				Type:        schema.TypeList,
 				Description: "Spec of the pod owned by the cluster",
 				Required:    true,
+				ForceNew: true,
 				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: statefulsetSpecFields(),
@@ -53,6 +57,37 @@ func resourceKubernetesStatefulsetCreate(d *schema.ResourceData, meta interface{
 	}
 	log.Printf("[INFO] Submitted new Statefulset: %#v", statefulset)
 	d.SetId(buildId(statefulset.ObjectMeta))
+	name := statefulset.ObjectMeta.Name
+
+	pending := make([]string, *statefulset.Spec.Replicas)
+	for i := range pending {
+		pending[i] = fmt.Sprintf("%v", i)
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Target:  []string{fmt.Sprintf("%v", *statefulset.Spec.Replicas)},
+		Pending: pending,
+		Timeout: 5 * time.Minute,
+		Refresh: func() (interface{}, string, error) {
+			out, err := conn.AppsV1().StatefulSets(metadata.Namespace).Get(name, meta_v1.GetOptions{})
+			if err != nil {
+				log.Printf("[ERROR] Received error: %#v", err)
+				return out, "", err
+			}
+
+			statusPhase := fmt.Sprintf("%v", out.Status.ReadyReplicas)
+			log.Printf("[DEBUG] Statefulset %s ready replicas: %#v", out.Name, statusPhase)
+			return out, statusPhase, nil
+		},
+	}
+	_, err = stateConf.WaitForState()
+	if err != nil {
+		lastWarnings, wErr := getLastWarningsForObject(conn, statefulset.ObjectMeta, "StatefulSet", 3)
+		if wErr != nil {
+			return wErr
+		}
+		return fmt.Errorf("%s%s", err, stringifyEvents(lastWarnings))
+	}
 
 	return resourceKubernetesStatefulsetRead(d, meta)
 }
@@ -78,42 +113,40 @@ func resourceKubernetesStatefulsetRead(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	//TODO
-	// flattenedRules := flattenRBACRules(role.Rules)
-	// log.Printf("[DEBUG] Flattened Statefulset ruleRef: %#v", flattenedRules)
-	// err = d.Set("rule", flattenedRules)
-	// if err != nil {
-	// 	return err
-	// }
+	flattenedSpec := flattenStatefulsetSpec(statefulset.Spec)
+	log.Printf("[DEBUG] Flattened Statefulset spec: %#v", flattenedSpec)
+	err = d.Set("spec", flattenedSpec)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
 func resourceKubernetesStatefulsetUpdate(d *schema.ResourceData, meta interface{}) error {
-	return fmt.Errorf("Update not implemented")
-
-	// conn := meta.(*kubernetes.Clientset)
-
-	// name := d.Id()
-
-	// ops := patchMetadata("metadata.0.", "/metadata/", d)
-	// if d.HasChange("rule") {
-	// 	diffOps := patchRbacRule(d)
-	// 	ops = append(ops, diffOps...)
-	// }
-	// data, err := ops.MarshalJSON()
-	// if err != nil {
-	// 	return fmt.Errorf("Failed to marshal update operations: %s", err)
-	// }
-	// log.Printf("[INFO] Updating ClusterRole %q: %v", name, string(data))
-	// out, err := conn.Rbac().ClusterRoles().Patch(name, pkgApi.JSONPatchType, data)
-	// if err != nil {
-	// 	return fmt.Errorf("Failed to update ClusterRole: %s", err)
-	// }
-	// log.Printf("[INFO] Submitted updated ClusterRole: %#v", out)
-	// d.SetId(out.ObjectMeta.Name)
-
-	// return resourceKubernetesClusterRoleRead(d, meta)
+	conn := meta.(*kubernetes.Clientset)
+	
+		namespace, name, err := idParts(d.Id())
+		if err != nil {
+			return err
+		}
+	
+		ops := patchMetadata("metadata.0.", "/metadata/", d)
+		data, err := ops.MarshalJSON()
+		if err != nil {
+			return fmt.Errorf("Failed to marshal update operations: %s", err)
+		}
+	
+		log.Printf("[INFO] Updating statefulset %s: %s", d.Id(), ops)
+	
+		out, err := conn.AppsV1().StatefulSets(namespace).Patch(name, pkgApi.JSONPatchType, data)
+		if err != nil {
+			return err
+		}
+		log.Printf("[INFO] Submitted updated statefulset: %#v", out)
+	
+		d.SetId(buildId(out.ObjectMeta))
+		return resourceKubernetesStatefulsetRead(d, meta)
 }
 
 func resourceKubernetesStatefulsetDelete(d *schema.ResourceData, meta interface{}) error {

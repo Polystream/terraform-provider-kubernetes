@@ -5,6 +5,56 @@ import (
 	api "k8s.io/api/apps/v1"
 )
 
+func flattenStatefulsetSpec(in api.StatefulSetSpec) []interface{} {
+	att := make(map[string]interface{})
+	
+	att["replicas"] = *in.Replicas
+
+	att["selector"] = flattenLabelSelector(in.Selector)
+
+	att["template"] = flattenPodTemplateSpec(in.Template)
+
+	if(in.VolumeClaimTemplates != nil && len(in.VolumeClaimTemplates) > 0){
+		att["volume_claim_template"] = flattenVolumeClaimTemplates(in.VolumeClaimTemplates)
+	}
+
+	att["service_name"] = in.ServiceName
+	att["pod_management_policy"] = string(in.PodManagementPolicy)
+	att["update_strategy"] = flattenStatefulsetUpdateStrategy(in.UpdateStrategy)
+	att["revision_history_limit"] = *in.RevisionHistoryLimit
+
+	return []interface{}{att}
+}
+
+func flattenPodTemplateSpec(in v1.PodTemplateSpec) []interface{} {
+	att := make(map[string]interface{})
+	att["metadata"] = flattenMetadata(in.ObjectMeta)
+	att["spec"], _ = flattenPodSpec(in.Spec)
+	return []interface{}{att}
+}
+
+func flattenVolumeClaimTemplates(in []v1.PersistentVolumeClaim) []interface{} {
+	att := make([]interface{}, len(in), len(in))
+	for i, n := range in {
+		m := make(map[string]interface{})
+		m["metadata"] = flattenMetadata(n.ObjectMeta)
+		m["spec"] = flattenPersistentVolumeClaimSpec(n.Spec)
+		att[i] = m
+	}
+	return att
+}
+
+func flattenStatefulsetUpdateStrategy(in api.StatefulSetUpdateStrategy) []interface{} {
+	att := make(map[string]interface{})
+	att["type"] = string(in.Type)
+	if(in.RollingUpdate != nil){
+		update := make(map[string]interface{})
+		update["partition"] = *in.RollingUpdate.Partition
+		att["rolling_update"] = update
+	}
+	return []interface{}{att}
+}
+
 func expandStatefulsetSpec(in []interface{}) api.StatefulSetSpec {
 	if len(in) == 0 || in[0] == nil {
 		return api.StatefulSetSpec{}

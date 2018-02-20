@@ -125,18 +125,16 @@ func expandResourceRequirements(l []interface{}) (v1.ResourceRequirements, error
 	}
 	in := l[0].(map[string]interface{})
 	obj := v1.ResourceRequirements{}
-	if v, ok := in["limits"].([]interface{}); ok && len(v) > 0 {
-		m := v[0].(map[string]interface{})
+	if v, ok := in["limits"].(map[string]interface{}); ok && len(v) > 0 {
 		var err error
-		obj.Limits, err = expandMapToResourceList(m)
+		obj.Limits, err = expandMapToResourceList(v)
 		if err != nil {
 			return obj, err
 		}
 	}
-	if v, ok := in["requests"].([]interface{}); ok && len(v) > 0 {
-		m := v[0].(map[string]interface{})
+	if v, ok := in["requests"].(map[string]interface{}); ok && len(v) > 0 {
 		var err error
-		obj.Requests, err = expandMapToResourceList(m)
+		obj.Requests, err = expandMapToResourceList(v)
 		if err != nil {
 			return obj, err
 		}

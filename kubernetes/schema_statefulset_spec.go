@@ -1,5 +1,5 @@
-package kubernetes
 
+package kubernetes
 import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -44,11 +44,13 @@ func statefulsetSpecFields() map[string]*schema.Schema {
 		"pod_management_policy": {
 			Type:     schema.TypeString,
 			Optional: true,
+			Computed: true,
 		},
 		"update_strategy": {
 			Type:        schema.TypeList,
 			Description: "",
 			Optional:    true,
+			Computed: true,
 			MaxItems: 1,
 			Elem: &schema.Resource{
 				Schema: statefulsetUpdateSpecFields(),
@@ -57,6 +59,7 @@ func statefulsetSpecFields() map[string]*schema.Schema {
 		"revision_history_limit": {
 			Type:     schema.TypeInt,
 			Optional: true,
+			Computed: true,
 		},
 	}
 }
@@ -81,17 +84,20 @@ func statefulsetUpdateSpecFields() map[string]*schema.Schema {
 		"type": {
 			Type:     schema.TypeString,
 			Optional: true,
+			Computed: true,
 		},
 		"rolling_update": {
 			Type:        schema.TypeList,
 			Description: "",
 			Optional:    true,
+			Computed: true,
 			MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"partition": {
 						Type:     schema.TypeInt,
 						Optional: true,
+						Computed: true,
 					},
 				},
 			},
@@ -144,6 +150,7 @@ func statefulsetPersistentVolumeClaimFields() map[string]*schema.Schema {
 					"volume_mode": {
 						Type:     schema.TypeString,
 						Optional: true,
+						Computed: true,
 					},
 					"resources": {
 						Type:        schema.TypeList,

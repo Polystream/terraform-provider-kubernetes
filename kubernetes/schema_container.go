@@ -92,10 +92,9 @@ func handlerFields() map[string]*schema.Schema {
 func resourcesField() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"limits": {
-			Type:        schema.TypeList,
+			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,
-			MaxItems:    1,
 			Description: "Describes the maximum amount of compute resources allowed. More info: http://kubernetes.io/docs/user-guide/compute-resources/",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
@@ -117,10 +116,9 @@ func resourcesField() map[string]*schema.Schema {
 			},
 		},
 		"requests": {
-			Type:     schema.TypeList,
+			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
-			MaxItems: 1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"cpu": {

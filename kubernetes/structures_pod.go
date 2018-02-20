@@ -19,6 +19,11 @@ func flattenPodSpec(in v1.PodSpec) ([]interface{}, error) {
 		return nil, err
 	}
 	att["container"] = containers
+	iniContainers, err := flattenContainers(in.InitContainers)
+	if err != nil {
+		return nil, err
+	}
+	att["init_container"] = iniContainers
 
 	att["dns_policy"] = in.DNSPolicy
 
