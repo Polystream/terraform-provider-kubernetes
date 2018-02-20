@@ -67,7 +67,7 @@ func resourceKubernetesStatefulsetCreate(d *schema.ResourceData, meta interface{
 	stateConf := &resource.StateChangeConf{
 		Target:  []string{fmt.Sprintf("%v", *statefulset.Spec.Replicas)},
 		Pending: pending,
-		Timeout: 5 * time.Minute,
+		Timeout: 20 * time.Minute,
 		Refresh: func() (interface{}, string, error) {
 			out, err := conn.AppsV1().StatefulSets(metadata.Namespace).Get(name, meta_v1.GetOptions{})
 			if err != nil {

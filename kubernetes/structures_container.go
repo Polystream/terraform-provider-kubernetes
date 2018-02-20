@@ -813,32 +813,28 @@ func expandContainerResourceRequirements(l []interface{}) (v1.ResourceRequiremen
 	in := l[0].(map[string]interface{})
 	obj := v1.ResourceRequirements{}
 
-	fn := func(in []interface{}) (v1.ResourceList, error) {
-		for _, c := range in {
-			p := c.(map[string]interface{})
-			if p["cpu"] == "" {
-				delete(p, "cpu")
-			}
-			if p["memory"] == "" {
-				delete(p, "memory")
-			}
-			if p["storage"] == "" {
-				delete(p, "storage")
-			}
-			return expandMapToResourceList(p)
+	fn := func(in map[string]interface{}) (v1.ResourceList, error) {
+		if in["cpu"] == "" {
+			delete(in, "cpu")
 		}
-		return nil, nil
+		if in["memory"] == "" {
+			delete(in, "memory")
+		}
+		if in["storage"] == "" {
+			delete(in, "storage")
+		}
+		return expandMapToResourceList(in)
 	}
 
 	var err error
-	if v, ok := in["limits"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := in["limits"].(map[string]interface{}); ok && len(v) > 0 {
 		obj.Limits, err = fn(v)
 		if err != nil {
 			return obj, err
 		}
 	}
 
-	if v, ok := in["requests"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := in["requests"].(map[string]interface{}); ok && len(v) > 0 {
 		obj.Requests, err = fn(v)
 		if err != nil {
 			return obj, err
