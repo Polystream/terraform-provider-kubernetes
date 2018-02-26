@@ -50,7 +50,7 @@ func flattenStatefulsetUpdateStrategy(in api.StatefulSetUpdateStrategy) []interf
 	if(in.RollingUpdate != nil){
 		update := make(map[string]interface{})
 		update["partition"] = *in.RollingUpdate.Partition
-		att["rolling_update"] = update
+		att["rolling_update"] = []interface{}{update}
 	}
 	return []interface{}{att}
 }
