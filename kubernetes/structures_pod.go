@@ -52,6 +52,9 @@ func flattenPodSpec(in v1.PodSpec) ([]interface{}, error) {
 	if in.ServiceAccountName != "" {
 		att["service_account_name"] = in.ServiceAccountName
 	}
+	if *in.AutomountServiceAccountToken {
+		att["automount_service_account"] = true
+	}
 	if in.Subdomain != "" {
 		att["subdomain"] = in.Subdomain
 	}
@@ -387,6 +390,10 @@ func expandPodSpec(p []interface{}) (v1.PodSpec, error) {
 
 	if v, ok := in["service_account_name"].(string); ok {
 		obj.ServiceAccountName = v
+	}
+
+	if v, ok := in["automount_service_account"].(bool); ok {
+		obj.AutomountServiceAccountToken = &v
 	}
 
 	if v, ok := in["subdomain"].(string); ok {

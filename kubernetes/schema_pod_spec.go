@@ -140,6 +140,12 @@ func podSpecFields(isUpdatable bool) map[string]*schema.Schema {
 			Computed:    true,
 			Description: "ServiceAccountName is the name of the ServiceAccount to use to run this pod. More info: http://releases.k8s.io/HEAD/docs/design/service_accounts.md.",
 		},
+		"automount_service_account": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Computed:    true,
+			Description: "",
+		},
 		"subdomain": {
 			Type:        schema.TypeString,
 			Optional:    true,
