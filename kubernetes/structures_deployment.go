@@ -3,6 +3,7 @@ package kubernetes
 import (
 	api "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func flattenDeploymentSpec(in api.DeploymentSpec) []interface{} {
@@ -92,4 +93,33 @@ func expandDeploymentStrategy(in []interface{}) api.DeploymentStrategy {
 	}
 
 	return strategy
+}
+
+func patchDeploymentSpec(pathPrefix, prefix string, d *schema.ResourceData) (PatchOperations, error) {
+	ops := make([]PatchOperation, 0)
+
+	if d.HasChange(prefix + "replicas") {
+		v := d.Get(prefix + "replicas").(int)
+		ops = append(ops, &ReplaceOperation{
+			Path:  pathPrefix + "/replicas",
+			Value: v,
+		})
+	}
+
+	if d.HasChange(prefix + "template.0.metadata") {
+		metadataOps := patchMetadata(pathPrefix + "/template/metadata/", prefix + "template.0.metadata.0.", d)
+		
+		ops = append(ops, metadataOps...)
+	}
+
+	if d.HasChange(prefix + "template.0.spec") {
+		podOps, err := patchPodSpec(pathPrefix + "/template/spec", prefix + "template.0.spec.0.", d)
+		if err != nil {
+			return nil, err
+		}
+		
+		ops = append(ops, podOps...)
+	}
+
+	return ops, nil
 }

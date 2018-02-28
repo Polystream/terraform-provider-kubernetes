@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"k8s.io/api/core/v1"
 	api "k8s.io/api/apps/v1"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func flattenStatefulsetSpec(in api.StatefulSetSpec) []interface{} {
@@ -148,4 +149,33 @@ func expandStatefulSetUpdateStrategy(in []interface{}) api.StatefulSetUpdateStra
 	}
 
 	return strategy
+}
+
+func patchStatefultsetSpec(pathPrefix, prefix string, d *schema.ResourceData) (PatchOperations, error) {
+	ops := make([]PatchOperation, 0)
+
+	if d.HasChange(prefix + "replicas") {
+		v := d.Get(prefix + "replicas").(int)
+		ops = append(ops, &ReplaceOperation{
+			Path:  pathPrefix + "/replicas",
+			Value: v,
+		})
+	}
+
+	if d.HasChange(prefix + "template.0.metadata") {
+		metadataOps := patchMetadata(pathPrefix + "/template/metadata/", prefix + "template.0.metadata.0.", d)
+		
+		ops = append(ops, metadataOps...)
+	}
+
+	if d.HasChange(prefix + "template.0.spec") {
+		podOps, err := patchPodSpec(pathPrefix + "/template/spec", prefix + "template.0.spec.0.", d)
+		if err != nil {
+			return nil, err
+		}
+		
+		ops = append(ops, podOps...)
+	}
+
+	return ops, nil
 }

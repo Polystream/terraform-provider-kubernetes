@@ -132,6 +132,13 @@ func resourceKubernetesDeploymentUpdate(d *schema.ResourceData, meta interface{}
 		}
 	
 		ops := patchMetadata("metadata.0.", "/metadata/", d)
+		if d.HasChange("spec") {
+			specOps, err := patchDeploymentSpec("/spec", "spec.0.", d)
+			if err != nil {
+				return err
+			}
+			ops = append(ops, specOps...)
+		}
 		data, err := ops.MarshalJSON()
 		if err != nil {
 			return fmt.Errorf("Failed to marshal update operations: %s", err)
