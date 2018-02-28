@@ -706,10 +706,17 @@ func patchPodSpec(pathPrefix, prefix string, d *schema.ResourceData) (PatchOpera
 	ops := make([]PatchOperation, 0)
 
 	if d.HasChange(prefix + "active_deadline_seconds") {
-
 		v := d.Get(prefix + "active_deadline_seconds").(int)
 		ops = append(ops, &ReplaceOperation{
 			Path:  pathPrefix + "/activeDeadlineSeconds",
+			Value: v,
+		})
+	}
+
+	if d.HasChange(prefix + "automount_service_account") {
+		v := d.Get(prefix + "automount_service_account").(bool)
+		ops = append(ops, &ReplaceOperation{
+			Path:  pathPrefix + "/automountServiceAccount",
 			Value: v,
 		})
 	}
