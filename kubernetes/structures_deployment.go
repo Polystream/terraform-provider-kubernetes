@@ -8,14 +8,19 @@ import (
 
 func flattenDeploymentSpec(in api.DeploymentSpec) []interface{} {
 	att := make(map[string]interface{})
-	
-	att["replicas"] = *in.Replicas
+	if in.Replicas != nil {
+		att["replicas"] = *in.Replicas
+	}
 	att["selector"] = flattenLabelSelector(in.Selector)
 	att["template"] = flattenPodTemplateSpec(in.Template)
 	att["min_ready_seconds"] = in.MinReadySeconds
-	att["progress_deadline_seconds"] = *in.ProgressDeadlineSeconds
+	if in.ProgressDeadlineSeconds != nil {
+		att["progress_deadline_seconds"] = *in.ProgressDeadlineSeconds
+	}
 	att["deployment_strategy"] = flattenDeploymentStrategy(in.Strategy)
-	att["revision_history_limit"] = *in.RevisionHistoryLimit
+	if in.RevisionHistoryLimit != nil {
+		att["revision_history_limit"] = *in.RevisionHistoryLimit
+	}
 
 	return []interface{}{att}
 }
@@ -26,8 +31,12 @@ func flattenDeploymentStrategy(in api.DeploymentStrategy) []interface{} {
 	att["type"] = string(in.Type)
 	if(in.RollingUpdate != nil){
 		update := make(map[string]interface{})
-		update["max_unavailable"] = (*in.RollingUpdate.MaxUnavailable).String()
-		update["max_surge"] = (*in.RollingUpdate.MaxSurge).String()
+		if in.RollingUpdate.MaxUnavailable != nil {
+			update["max_unavailable"] = (*in.RollingUpdate.MaxUnavailable).String()
+		}
+		if in.RollingUpdate.MaxSurge != nil {
+			update["max_surge"] = (*in.RollingUpdate.MaxSurge).String()
+		}
 		att["rolling_update"] = []interface{}{update}
 	}
 
@@ -40,30 +49,27 @@ func expandDeploymentSpec(in []interface{}) api.DeploymentSpec {
 	}
 	spec := api.DeploymentSpec{}
 	m := in[0].(map[string]interface{})
-	if v, ok := m["replicas"]; ok {
-		replicas := int32(v.(int))
-		spec.Replicas = &replicas
+	if v, ok := m["replicas"].(int); ok {
+		spec.Replicas = ptrToInt32(int32(v))
 	}
-	if v, ok := m["selector"]; ok {
-		spec.Selector = expandLabelSelector(v.([]interface{}))
+	if v, ok := m["selector"].([]interface{}); ok {
+		spec.Selector = expandLabelSelector(v)
 	}
-	if v, ok := m["template"]; ok {
-		spec.Template = expandPodTemplateSpec(v.([]interface{}))
+	if v, ok := m["template"].([]interface{}); ok {
+		spec.Template = expandPodTemplateSpec(v)
 	}
 
-	if v, ok := m["min_ready_seconds"]; ok {
-		spec.MinReadySeconds = int32(v.(int))
+	if v, ok := m["min_ready_seconds"].(int); ok {
+		spec.MinReadySeconds = int32(v)
 	}
-	if v, ok := m["deployment_strategy"]; ok {
-		spec.Strategy = expandDeploymentStrategy(v.([]interface{}))
+	if v, ok := m["deployment_strategy"].([]interface{}); ok {
+		spec.Strategy = expandDeploymentStrategy(v)
 	}
-	if v, ok := m["revision_history_limit"]; ok {
-		limit := int32(v.(int))
-		spec.RevisionHistoryLimit = &limit
+	if v, ok := m["revision_history_limit"].(int); ok {
+		spec.RevisionHistoryLimit = ptrToInt32(int32(v))
 	}
-	if v, ok := m["progress_deadline_seconds"]; ok {
-		seconds := int32(v.(int))
-		spec.ProgressDeadlineSeconds = &seconds
+	if v, ok := m["progress_deadline_seconds"].(int); ok {
+		spec.ProgressDeadlineSeconds = ptrToInt32(int32(v))
 	}
 	return spec
 }
@@ -75,19 +81,18 @@ func expandDeploymentStrategy(in []interface{}) api.DeploymentStrategy {
 	strategy := api.DeploymentStrategy{}
 	m := in[0].(map[string]interface{})
 
-	if v, ok := m["type"]; ok {
-		strategy.Type = api.DeploymentStrategyType(v.(string))
+	if v, ok := m["type"].(string); ok {
+		strategy.Type = api.DeploymentStrategyType(v)
 	}
 
-	if v, ok := m["rolling_update"]; ok {
-		u := v.(map[string]interface{})
+	if v, ok := m["rolling_update"].(map[string]interface{}); ok {
 		update := api.RollingUpdateDeployment{}
-		if v, ok := u["max_unavailable"]; ok {
-			val := intstr.FromString(v.(string))
+		if v, ok := v["max_unavailable"].(string); ok {
+			val := intstr.FromString(v)
 			update.MaxUnavailable = &val
 		}
-		if v, ok := u["max_surge"]; ok {
-			val := intstr.FromString(v.(string))
+		if v, ok := v["max_surge"].(string); ok {
+			val := intstr.FromString(v)
 			update.MaxSurge = &val
 		}
 	}

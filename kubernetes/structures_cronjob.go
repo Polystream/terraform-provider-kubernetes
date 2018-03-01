@@ -10,12 +10,20 @@ func flattenCronJobSpec(in api.CronJobSpec) []interface{} {
 	att := make(map[string]interface{})
 	
 	att["schedule"] = in.Schedule
-	att["starting_deadline_seconds"] = *in.StartingDeadlineSeconds
+	if in.StartingDeadlineSeconds != nil {
+		att["starting_deadline_seconds"] = *in.StartingDeadlineSeconds
+	}
 	att["concurrency_policy"] = string(in.ConcurrencyPolicy)
-	att["suspend"] = *in.Suspend
-	att["successful_jobs_history_limit"] = *in.SuccessfulJobsHistoryLimit
-	att["failed_jobs_history_limit"] = *in.FailedJobsHistoryLimit
-	att["template"] = flattenJobTemplate(in.JobTemplate)
+	if in.Suspend != nil {
+		att["suspend"] = *in.Suspend
+	}
+	if in.SuccessfulJobsHistoryLimit != nil {
+		att["successful_jobs_history_limit"] = *in.SuccessfulJobsHistoryLimit
+	}
+	if in.FailedJobsHistoryLimit != nil {
+		att["failed_jobs_history_limit"] = *in.FailedJobsHistoryLimit
+	}
+	att["job_template"] = flattenJobTemplate(in.JobTemplate)
 
 	return []interface{}{att}
 }
@@ -32,12 +40,20 @@ func flattenJobTemplate(in api.JobTemplateSpec) []interface{} {
 func flattenJobSpec(in batchv1.JobSpec) []interface{} {
 	att := make(map[string]interface{})
 
-	att["parallelism"] = *in.Parallelism
-	att["completions"] = *in.Completions
-	att["active_deadline_seconds"] = *in.ActiveDeadlineSeconds
-	att["backoff_limit"] = *in.BackoffLimit
+	if in.Parallelism != nil {
+		att["parallelism"] = *in.Parallelism
+	}
+	if in.Completions != nil {
+		att["completions"] = *in.Completions
+	}
+	if in.ActiveDeadlineSeconds != nil {
+		att["active_deadline_seconds"] = *in.ActiveDeadlineSeconds
+	}
+	if in.BackoffLimit != nil {
+		att["backoff_limit"] = *in.BackoffLimit
+	}
 	att["selector"] = flattenLabelSelector(in.Selector)
-	att["job_template"] = flattenPodTemplateSpec(in.Template)
+	att["template"] = flattenPodTemplateSpec(in.Template)
 
 	return []interface{}{att}
 }
@@ -51,23 +67,20 @@ func expandCronJobSpec(in []interface{}) api.CronJobSpec {
 	if v, ok := m["schedule"].(string); ok {
 		spec.Schedule = v
 	}
-	if v, ok := m["starting_deadline_seconds"]; ok {
-		time := int64(v.(int))
-		spec.StartingDeadlineSeconds = &time
+	if v, ok := m["starting_deadline_seconds"].(int); ok {
+		spec.StartingDeadlineSeconds = ptrToInt64(int64(v))
 	}
-	if v, ok := m["concurrency_policy"]; ok {
-		spec.ConcurrencyPolicy = api.ConcurrencyPolicy(v.(string))
+	if v, ok := m["concurrency_policy"].(string); ok {
+		spec.ConcurrencyPolicy = api.ConcurrencyPolicy(v)
 	}
 	if v, ok := m["suspend"].(bool); ok {
-		spec.Suspend = &v
+		spec.Suspend = ptrToBool(v)
 	}
 	if v, ok := m["successful_jobs_history_limit"].(int); ok {
-		limit := int32(v)
-		spec.SuccessfulJobsHistoryLimit = &limit
+		spec.SuccessfulJobsHistoryLimit = ptrToInt32(int32(v))
 	}
 	if v, ok := m["failed_jobs_history_limit"].(int); ok {
-		limit := int32(v)
-		spec.FailedJobsHistoryLimit = &limit
+		spec.FailedJobsHistoryLimit = ptrToInt32(int32(v))
 	}
 	if v, ok := m["job_template"].([]interface{}); ok {
 		spec.JobTemplate = expandJobTemplateSpec(v)
@@ -101,23 +114,19 @@ func expandJobSpec(in []interface{}) batchv1.JobSpec {
 	m := in[0].(map[string]interface{})
 
 	if v, ok := m["parallelism"].(int); ok {
-		p := int32(v)
-		spec.Parallelism = &p
+		spec.Parallelism = ptrToInt32(int32(v))
 	}
 
 	if v, ok := m["completions"].(int); ok {
-		p := int32(v)
-		spec.Completions = &p
+		spec.Completions = ptrToInt32(int32(v))
 	}
 
 	if v, ok := m["active_deadline_seconds"].(int); ok {
-		p := int64(v)
-		spec.ActiveDeadlineSeconds = &p
+		spec.ActiveDeadlineSeconds = ptrToInt64(int64(v))
 	}
 
 	if v, ok := m["backoff_limit"].(int); ok {
-		p := int32(v)
-		spec.BackoffLimit = &p
+		spec.BackoffLimit = ptrToInt32(int32(v))
 	}
 
 	if v, ok := m["selector"].([]interface{}); ok {
@@ -125,8 +134,7 @@ func expandJobSpec(in []interface{}) batchv1.JobSpec {
 			spec.Selector = expandLabelSelector(v)
 		}
 	}
-	manualSelector := false
-	spec.ManualSelector = &manualSelector
+	spec.ManualSelector = ptrToBool(false)
 
 	if v, ok := m["template"].([]interface{}); ok {
 		spec.Template = expandPodTemplateSpec(v)
