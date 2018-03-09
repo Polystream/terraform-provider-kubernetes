@@ -4,6 +4,24 @@ NOTES:
 
 * provider: Client library updated to support Kubernetes `1.7`
 
+IMPROVEMENTS:
+
+* resource/kubernetes_persistent_volume_claim: Improve event log polling for warnings [GH-125]
+* resource/kubernetes_persistent_volume: Add support for `storage_class_name` [GH-111]
+
+BUG FIXES:
+
+* resource/kubernetes_secret: Prevent binary data corruption [GH-103]
+* resource/kubernetes_persistent_volume: Update `persistent_volume_reclaim_policy` correctly [GH-111]
+* resource/kubernetes_service: Update external_ips correctly on K8S 1.8+ [GH-127]
+* resource/kubernetes_*: Fix adding labels/annotations to resources when those were empty [GH-116]
+* resource/kubernetes_*: Treat non-string label values as invalid [GH-135]
+* resource/kubernetes_config_map: Fix adding `data` when it was empty [GH-116]
+* resource/kubernetes_secret: Fix adding `data` when it was empty [GH-116]
+* resource/kubernetes_limit_range: Avoid spurious diff when spec is empty [GH-132]
+* resource/kubernetes_persistent_volume: Use correct operation when updating `persistent_volume_source` (`1.8`) [GH-133]
+* resource/kubernetes_pod: Bump deletion timeout to 5 mins [GH-136]
+
 ## 1.0.1 (November 13, 2017)
 
 BUG FIXES:

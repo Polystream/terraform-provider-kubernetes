@@ -72,6 +72,14 @@ func expandStringMap(m map[string]interface{}) map[string]string {
 	return result
 }
 
+func expandStringMapToByteMap(m map[string]interface{}) map[string][]byte {
+	result := make(map[string][]byte)
+	for k, v := range m {
+		result[k] = []byte(v.(string))
+	}
+	return result
+}
+
 func expandStringSlice(s []interface{}) []string {
 	result := make([]string, len(s), len(s))
 	for k, v := range s {
@@ -374,6 +382,10 @@ func expandLimitRangeSpec(s []interface{}, isNew bool) (api.LimitRangeSpec, erro
 }
 
 func flattenLimitRangeSpec(in api.LimitRangeSpec) []interface{} {
+	if len(in.Limits) == 0 {
+		return []interface{}{}
+	}
+
 	out := make([]interface{}, 1)
 	limits := make([]interface{}, len(in.Limits), len(in.Limits))
 
