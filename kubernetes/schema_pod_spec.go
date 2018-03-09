@@ -12,6 +12,14 @@ func podSpecFields(isUpdatable bool) map[string]*schema.Schema {
 			ValidateFunc: validatePositiveInteger,
 			Description:  "Optional duration in seconds the pod may be active on the node relative to StartTime before the system will actively try to mark it failed and kill associated containers. Value must be a positive integer.",
 		},
+		"init_container": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "",
+			Elem: &schema.Resource{
+				Schema: containerFields(isUpdatable),
+			},
+		},
 		"container": {
 			Type:        schema.TypeList,
 			Optional:    true,
@@ -131,6 +139,12 @@ func podSpecFields(isUpdatable bool) map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Description: "ServiceAccountName is the name of the ServiceAccount to use to run this pod. More info: http://releases.k8s.io/HEAD/docs/design/service_accounts.md.",
+		},
+		"automount_service_account": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Computed:    true,
+			Description: "",
 		},
 		"subdomain": {
 			Type:        schema.TypeString,

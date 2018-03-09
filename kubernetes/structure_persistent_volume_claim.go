@@ -9,6 +9,9 @@ import (
 // Flatteners
 
 func flattenLabelSelector(in *metav1.LabelSelector) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
 	att := make(map[string]interface{})
 	if len(in.MatchLabels) > 0 {
 		att["match_labels"] = in.MatchLabels
@@ -23,6 +26,9 @@ func flattenLabelSelector(in *metav1.LabelSelector) []interface{} {
 }
 
 func flattenLabelSelectorRequirement(in []metav1.LabelSelectorRequirement) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
 	att := make([]interface{}, len(in), len(in))
 	for i, n := range in {
 		m := make(map[string]interface{})

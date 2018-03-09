@@ -25,6 +25,28 @@ func TestAccKubernetesSecret_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckKubernetesSecretDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccKubernetesSecretConfig_emptyData(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckKubernetesSecretExists("kubernetes_secret.test", &conf),
+					resource.TestCheckResourceAttr("kubernetes_secret.test", "metadata.0.annotations.%", "2"),
+					resource.TestCheckResourceAttr("kubernetes_secret.test", "metadata.0.annotations.TestAnnotationOne", "one"),
+					resource.TestCheckResourceAttr("kubernetes_secret.test", "metadata.0.annotations.TestAnnotationTwo", "two"),
+					testAccCheckMetaAnnotations(&conf.ObjectMeta, map[string]string{"TestAnnotationOne": "one", "TestAnnotationTwo": "two"}),
+					resource.TestCheckResourceAttr("kubernetes_secret.test", "metadata.0.labels.%", "3"),
+					resource.TestCheckResourceAttr("kubernetes_secret.test", "metadata.0.labels.TestLabelOne", "one"),
+					resource.TestCheckResourceAttr("kubernetes_secret.test", "metadata.0.labels.TestLabelTwo", "two"),
+					resource.TestCheckResourceAttr("kubernetes_secret.test", "metadata.0.labels.TestLabelThree", "three"),
+					testAccCheckMetaLabels(&conf.ObjectMeta, map[string]string{"TestLabelOne": "one", "TestLabelTwo": "two", "TestLabelThree": "three"}),
+					resource.TestCheckResourceAttr("kubernetes_secret.test", "metadata.0.name", name),
+					resource.TestCheckResourceAttrSet("kubernetes_secret.test", "metadata.0.generation"),
+					resource.TestCheckResourceAttrSet("kubernetes_secret.test", "metadata.0.resource_version"),
+					resource.TestCheckResourceAttrSet("kubernetes_secret.test", "metadata.0.self_link"),
+					resource.TestCheckResourceAttrSet("kubernetes_secret.test", "metadata.0.uid"),
+					resource.TestCheckResourceAttr("kubernetes_secret.test", "data.%", "0"),
+					resource.TestCheckResourceAttr("kubernetes_secret.test", "type", "Opaque"),
+				),
+			},
+			{
 				Config: testAccKubernetesSecretConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKubernetesSecretExists("kubernetes_secret.test", &conf),
@@ -129,9 +151,10 @@ func TestAccKubernetesSecret_importBasic(t *testing.T) {
 			},
 
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metadata.0.resource_version"},
 			},
 		},
 	})
@@ -181,9 +204,38 @@ func TestAccKubernetesSecret_importGeneratedName(t *testing.T) {
 			},
 
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metadata.0.resource_version"},
+			},
+		},
+	})
+}
+
+func TestAccKubernetesSecret_binaryData(t *testing.T) {
+	var conf api.Secret
+	prefix := "tf-acc-test-gen-"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "kubernetes_secret.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckKubernetesSecretDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKubernetesSecretConfig_binaryData(prefix),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckKubernetesSecretExists("kubernetes_secret.test", &conf),
+					resource.TestCheckResourceAttr("kubernetes_secret.test", "data.%", "1"),
+				),
+			},
+			{
+				Config: testAccKubernetesSecretConfig_binaryData2(prefix),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckKubernetesSecretExists("kubernetes_secret.test", &conf),
+					resource.TestCheckResourceAttr("kubernetes_secret.test", "data.%", "2"),
+				),
 			},
 		},
 	})
@@ -248,6 +300,25 @@ func testAccCheckKubernetesSecretExists(n string, obj *api.Secret) resource.Test
 		*obj = *out
 		return nil
 	}
+}
+
+func testAccKubernetesSecretConfig_emptyData(name string) string {
+	return fmt.Sprintf(`
+resource "kubernetes_secret" "test" {
+	metadata {
+		annotations {
+			TestAnnotationOne = "one"
+			TestAnnotationTwo = "two"
+		}
+		labels {
+			TestLabelOne = "one"
+			TestLabelTwo = "two"
+			TestLabelThree = "three"
+		}
+		name = "%s"
+	}
+	data {}
+}`, name)
 }
 
 func testAccKubernetesSecretConfig_basic(name string) string {
@@ -326,6 +397,31 @@ resource "kubernetes_secret" "test" {
 	data {
 		one = "first"
 		two = "second"
+	}
+}`, prefix)
+}
+
+func testAccKubernetesSecretConfig_binaryData(prefix string) string {
+	return fmt.Sprintf(`
+resource "kubernetes_secret" "test" {
+	metadata {
+		generate_name = "%s"
+	}
+	data {
+		one = "${file("./test-fixtures/binary.data")}"
+	}
+}`, prefix)
+}
+
+func testAccKubernetesSecretConfig_binaryData2(prefix string) string {
+	return fmt.Sprintf(`
+resource "kubernetes_secret" "test" {
+	metadata {
+		generate_name = "%s"
+	}
+	data {
+		one = "${file("./test-fixtures/binary2.data")}"
+		two = "${file("./test-fixtures/binary.data")}"
 	}
 }`, prefix)
 }

@@ -19,6 +19,11 @@ func flattenPodSpec(in v1.PodSpec) ([]interface{}, error) {
 		return nil, err
 	}
 	att["container"] = containers
+	iniContainers, err := flattenContainers(in.InitContainers)
+	if err != nil {
+		return nil, err
+	}
+	att["init_container"] = iniContainers
 
 	att["dns_policy"] = in.DNSPolicy
 
@@ -46,6 +51,9 @@ func flattenPodSpec(in v1.PodSpec) ([]interface{}, error) {
 	}
 	if in.ServiceAccountName != "" {
 		att["service_account_name"] = in.ServiceAccountName
+	}
+	if *in.AutomountServiceAccountToken {
+		att["automount_service_account"] = true
 	}
 	if in.Subdomain != "" {
 		att["subdomain"] = in.Subdomain
@@ -325,6 +333,14 @@ func expandPodSpec(p []interface{}) (v1.PodSpec, error) {
 		obj.Containers = cs
 	}
 
+	if v, ok := in["init_container"].([]interface{}); ok && len(v) > 0 {
+		cs, err := expandContainers(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.InitContainers = cs
+	}
+
 	if v, ok := in["dns_policy"].(string); ok {
 		obj.DNSPolicy = v1.DNSPolicy(v)
 	}
@@ -374,6 +390,10 @@ func expandPodSpec(p []interface{}) (v1.PodSpec, error) {
 
 	if v, ok := in["service_account_name"].(string); ok {
 		obj.ServiceAccountName = v
+	}
+
+	if v, ok := in["automount_service_account"].(bool); ok {
+		obj.AutomountServiceAccountToken = &v
 	}
 
 	if v, ok := in["subdomain"].(string); ok {
@@ -686,10 +706,17 @@ func patchPodSpec(pathPrefix, prefix string, d *schema.ResourceData) (PatchOpera
 	ops := make([]PatchOperation, 0)
 
 	if d.HasChange(prefix + "active_deadline_seconds") {
-
 		v := d.Get(prefix + "active_deadline_seconds").(int)
 		ops = append(ops, &ReplaceOperation{
 			Path:  pathPrefix + "/activeDeadlineSeconds",
+			Value: v,
+		})
+	}
+
+	if d.HasChange(prefix + "automount_service_account") {
+		v := d.Get(prefix + "automount_service_account").(bool)
+		ops = append(ops, &ReplaceOperation{
+			Path:  pathPrefix + "/automountServiceAccount",
 			Value: v,
 		})
 	}
