@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"fmt"
 	"log"
+	"encoding/json"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -98,22 +99,20 @@ func resourceKubernetesCronJobUpdate(d *schema.ResourceData, meta interface{}) e
 			return err
 		}
 	
-		ops := patchMetadata("metadata.0.", "/metadata/", d)
-		if d.HasChange("spec") {
-			specOps, err := patchCronJobSpec("/spec", "spec.0.", d)
-			if err != nil {
-				return err
-			}
-			ops = append(ops, specOps...)
+		metadata := expandMetadata(d.Get("metadata").([]interface{}))
+		CronJob := &v1beta1.CronJob{
+			ObjectMeta: metadata,
+			Spec: expandCronJobSpec(d.Get("spec").([]interface{})),
 		}
-		data, err := ops.MarshalJSON()
+
+		data, err := json.Marshal(CronJob)
 		if err != nil {
 			return fmt.Errorf("Failed to marshal update operations: %s", err)
 		}
 	
-		log.Printf("[INFO] Updating CronJob %s: %s", d.Id(), ops)
+		log.Printf("[INFO] Updating CronJob %s: %s", d.Id(), CronJob)
 	
-		out, err := conn.BatchV1beta1().CronJobs(namespace).Patch(name, pkgApi.JSONPatchType, data)
+		out, err := conn.BatchV1beta1().CronJobs(namespace).Patch(name, pkgApi.StrategicMergePatchType, data)
 		if err != nil {
 			return err
 		}

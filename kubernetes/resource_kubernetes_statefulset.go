@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"encoding/json"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -131,22 +132,20 @@ func resourceKubernetesStatefulsetUpdate(d *schema.ResourceData, meta interface{
 			return err
 		}
 	
-		ops := patchMetadata("metadata.0.", "/metadata/", d)
-		if d.HasChange("spec") {
-			specOps, err := patchStatefultsetSpec("/spec", "spec.0.", d)
-			if err != nil {
-				return err
-			}
-			ops = append(ops, specOps...)
+		metadata := expandMetadata(d.Get("metadata").([]interface{}))
+		statefulset := &v1.StatefulSet{
+			ObjectMeta: metadata,
+			Spec: expandStatefulsetSpec(d.Get("spec").([]interface{})),
 		}
-		data, err := ops.MarshalJSON()
+
+		data, err := json.Marshal(statefulset)
 		if err != nil {
 			return fmt.Errorf("Failed to marshal update operations: %s", err)
 		}
 	
-		log.Printf("[INFO] Updating statefulset %s: %s", d.Id(), ops)
+		log.Printf("[INFO] Updating statefulset %s: %s", d.Id(), statefulset)
 	
-		out, err := conn.AppsV1().StatefulSets(namespace).Patch(name, pkgApi.JSONPatchType, data)
+		out, err := conn.AppsV1().StatefulSets(namespace).Patch(name, pkgApi.StrategicMergePatchType, data)
 		if err != nil {
 			return err
 		}
