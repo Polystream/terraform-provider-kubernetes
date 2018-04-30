@@ -576,18 +576,12 @@ func expandProbe(l []interface{}) *v1.Probe {
 	obj := v1.Probe{}
 	if v, ok := in["exec"].([]interface{}); ok && len(v) > 0 {
 		obj.Exec = expandExec(v)
-	} else {
-		obj.Exec = &v1.ExecAction{}
 	}
 	if v, ok := in["http_get"].([]interface{}); ok && len(v) > 0 {
 		obj.HTTPGet = expandHTTPGet(v)
-	} else {
-		obj.HTTPGet = &v1.HTTPGetAction{}
 	}
 	if v, ok := in["tcp_socket"].([]interface{}); ok && len(v) > 0 {
 		obj.TCPSocket = expandTCPSocket(v)
-	} else {
-		obj.TCPSocket = &v1.TCPSocketAction{}
 	}
 	if v, ok := in["failure_threshold"].(int); ok {
 		obj.FailureThreshold = int32(v)
