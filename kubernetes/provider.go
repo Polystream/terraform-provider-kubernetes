@@ -124,9 +124,12 @@ func Provider() terraform.ResourceProvider {
 			"kubernetes_storage_class":             resourceKubernetesStorageClass(),
 			"kubernetes_cluster_role_binding":      resourceKubernetesClusterRoleBinding(),
 			"kubernetes_cluster_role":              resourceKubernetesClusterRole(),
+			"kubernetes_role_binding":              resourceKubernetesRoleBinding(),
+			"kubernetes_role":                      resourceKubernetesRole(),
 			"kubernetes_statefulset":               resourceKubernetesStatefulSet(),
 			"kubernetes_deployment":               	resourceKubernetesDeployment(),
 			"kubernetes_cronjob":               	resourceKubernetesCronJob(),
+			"kubernetes_ingress":               	resourceKubernetesIngress(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
