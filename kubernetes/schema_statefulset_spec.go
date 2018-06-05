@@ -167,33 +167,3 @@ func statefulsetPersistentVolumeClaimFields() map[string]*schema.Schema {
 		},
 	}
 }
-
-func labelSelectorFields() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"match_labels": {
-			Type:     schema.TypeMap,
-			Optional: true,
-		},
-		"match_expressions": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"key": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"operator": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"values": {
-						Type:     schema.TypeList,
-						Optional: true,
-						Elem:  &schema.Schema{Type: schema.TypeString},
-					},
-				},
-			},
-		},
-	}
-}

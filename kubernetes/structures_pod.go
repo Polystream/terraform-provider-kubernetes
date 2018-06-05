@@ -14,16 +14,18 @@ func flattenPodSpec(in v1.PodSpec) ([]interface{}, error) {
 	if in.ActiveDeadlineSeconds != nil {
 		att["active_deadline_seconds"] = *in.ActiveDeadlineSeconds
 	}
+
 	containers, err := flattenContainers(in.Containers)
 	if err != nil {
 		return nil, err
 	}
 	att["container"] = containers
-	iniContainers, err := flattenContainers(in.InitContainers)
+
+	initContainers, err := flattenContainers(in.InitContainers)
 	if err != nil {
 		return nil, err
 	}
-	att["init_container"] = iniContainers
+	att["init_container"] = initContainers
 
 	att["dns_policy"] = in.DNSPolicy
 

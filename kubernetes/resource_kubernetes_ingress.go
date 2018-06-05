@@ -11,6 +11,7 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	pkgApi "k8s.io/apimachinery/pkg/types"
 	kubernetes "k8s.io/client-go/kubernetes"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func resourceKubernetesIngress() *schema.Resource {
@@ -42,7 +43,7 @@ func resourceKubernetesIngress() *schema.Resource {
 										Required:    true,
 									},
 									"service_port": {
-										Type:        schema.TypeInt,
+										Type:        schema.TypeString,
 										Required:    true,
 									},
 								},
@@ -101,7 +102,7 @@ func resourceKubernetesIngress() *schema.Resource {
 																		Required:    true,
 																	},
 																	"service_port": {
-																		Type:        schema.TypeInt,
+																		Type:        schema.TypeString,
 																		Required:    true,
 																	},
 																},
@@ -254,7 +255,7 @@ func expandIngressSpec(in []interface{}) api.IngressSpec {
 			n := v[0].(map[string]interface{})
 			backend := api.IngressBackend{}
 			backend.ServiceName = n["service_name"].(string)
-			backend.ServicePort = expandIntOrString(n["service_port"].(int))
+			backend.ServicePort = intstr.Parse(n["service_port"].(string))
 			spec.Backend = &backend
 		}
 	}
@@ -296,7 +297,7 @@ func expandIngressSpec(in []interface{}) api.IngressSpec {
 						backend := (path["backend"].([]interface{}))[0].(map[string]interface{})
 						paths[i].Backend = api.IngressBackend {
 							ServiceName: backend["service_name"].(string),
-							ServicePort: expandIntOrString(backend["service_port"].(int)),
+							ServicePort: intstr.Parse(backend["service_port"].(string)),
 						}
 					}
 					http.Paths = paths
@@ -316,7 +317,7 @@ func flattenIngressSpec(in api.IngressSpec) []interface{} {
 		backend := *in.Backend
 		a := make(map[string]interface{})
 		a["service_name"] = backend.ServiceName
-		a["service_port"] = flattenIntOrString(backend.ServicePort)
+		a["service_port"] = backend.ServicePort.String()
 		att["backend"] = a
 	}
 	
@@ -343,7 +344,7 @@ func flattenIngressSpec(in api.IngressSpec) []interface{} {
 				b["path"] = o.Path
 				c := make(map[string]interface{})
 				c["service_name"] = o.Backend.ServiceName
-				c["service_port"] = flattenIntOrString(o.Backend.ServicePort)
+				c["service_port"] = o.Backend.ServicePort.String()
 				backend := make([]map[string]interface{}, 1, 1)
 				backend[0] = c
 				b["backend"] = backend
