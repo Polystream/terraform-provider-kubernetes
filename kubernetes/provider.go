@@ -130,6 +130,7 @@ func Provider() terraform.ResourceProvider {
 			"kubernetes_deployment":               	resourceKubernetesDeployment(),
 			"kubernetes_cronjob":               	resourceKubernetesCronJob(),
 			"kubernetes_ingress":               	resourceKubernetesIngress(),
+			"kubernetes_daemonset":               	resourceKubernetesDaemonSet(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
