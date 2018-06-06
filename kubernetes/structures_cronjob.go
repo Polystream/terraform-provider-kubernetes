@@ -52,7 +52,9 @@ func flattenJobSpec(in batchv1.JobSpec) []interface{} {
 	if in.BackoffLimit != nil {
 		att["backoff_limit"] = *in.BackoffLimit
 	}
-	att["selector"] = flattenLabelSelector(in.Selector)
+	if in.Selector != nil {
+		att["selector"] = flattenLabelSelector(in.Selector)
+	}
 	att["template"] = flattenPodTemplateSpec(in.Template)
 
 	return []interface{}{att}
