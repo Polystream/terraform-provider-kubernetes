@@ -112,7 +112,7 @@ func resourceKubernetesRoleUpdate(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Failed to update Role: %s", err)
 	}
 	log.Printf("[INFO] Submitted updated Role: %#v", out)
-	d.SetId(out.ObjectMeta.Name)
+	d.SetId(buildId(out.ObjectMeta))
 
 	return resourceKubernetesRoleRead(d, meta)
 }

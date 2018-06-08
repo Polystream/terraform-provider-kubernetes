@@ -65,6 +65,10 @@ func flattenPodSpec(in v1.PodSpec) ([]interface{}, error) {
 		att["termination_grace_period_seconds"] = *in.TerminationGracePeriodSeconds
 	}
 
+	if in.Tolerations != nil && len(in.Tolerations) > 0 {
+		att["tolerations"] = flattenPodTolerations(in.Tolerations)
+	}
+
 	if len(in.Volumes) > 0 {
 		v, err := flattenVolumes(in.Volumes)
 		if err != nil {
@@ -73,6 +77,24 @@ func flattenPodSpec(in v1.PodSpec) ([]interface{}, error) {
 		att["volume"] = v
 	}
 	return []interface{}{att}, nil
+}
+
+func flattenPodTolerations(tolerations []v1.Toleration) []interface{} {
+	att := make([]interface{}, len(tolerations))
+	for i, v := range tolerations {
+		obj := map[string]interface{}{}
+
+		obj["effect"] = string(v.Effect)
+		obj["key"] = v.Key
+		obj["operator"] = string(v.Operator)
+		if(v.TolerationSeconds != nil){
+			obj["toleration_seconds"] = *v.TolerationSeconds
+		}
+		obj["value"] = v.Value
+		att[i] = obj
+	}
+
+	return att
 }
 
 func flattenPodSecurityContext(in *v1.PodSecurityContext) []interface{} {
@@ -413,7 +435,39 @@ func expandPodSpec(p []interface{}) (v1.PodSpec, error) {
 		}
 		obj.Volumes = cs
 	}
+
+	if v, ok := in["tolerations"].([]interface{}); ok && len(v) > 0 {
+		obj.Tolerations = expandTolerations(v)
+	}
+
 	return obj, nil
+}
+
+func expandTolerations(in []interface{}) []v1.Toleration {
+	if len(in) == 0 {
+		return []v1.Toleration{}
+	}
+	tolerations := make([]v1.Toleration, len(in))
+	for i, c := range in {
+		p := c.(map[string]interface{})
+		if v, ok := p["effect"].(string); ok {
+			tolerations[i].Effect = v1.TaintEffect(v)
+		}
+		if v, ok := p["key"].(string); ok {
+			tolerations[i].Key = v
+		}
+		if v, ok := p["operator"].(string); ok {
+			tolerations[i].Operator = v1.TolerationOperator(v)
+		}
+		if v, ok := p["toleration_seconds"].(int); ok && v >=0 {
+			tolerations[i].TolerationSeconds = ptrToInt64(int64(v))
+		}
+		if v, ok := p["value"].(string); ok {
+			tolerations[i].Value = v
+		}
+
+	}
+	return tolerations
 }
 
 func expandPodSecurityContext(l []interface{}) *v1.PodSecurityContext {

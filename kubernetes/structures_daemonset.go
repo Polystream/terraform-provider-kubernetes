@@ -65,7 +65,7 @@ func expandDaemonSetUpdateStrategy(in []interface{}) api.DaemonSetUpdateStrategy
 	}
 	if v, ok := m["rolling_update"]; ok {
 		x := v.([]interface{})
-		if len(x) > 0 && x[0] == nil {
+		if len(x) > 0 && x[0] != nil {
 			m = x[0].(map[string]interface{})
 			strategy.RollingUpdate = &api.RollingUpdateDaemonSet{}
 		}

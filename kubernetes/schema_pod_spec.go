@@ -166,6 +166,41 @@ func podSpecFields(isUpdatable bool) map[string]*schema.Schema {
 			Description: "List of volumes that can be mounted by containers belonging to the pod. More info: http://kubernetes.io/docs/user-guide/volumes",
 			Elem:        volumeSchema(),
 		},
+		"tolerations": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "",
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"effect": {
+						Type:        schema.TypeString,
+						Description: "",
+						Optional:    true,
+					},
+					"key": {
+						Type:        schema.TypeString,
+						Description: "",
+						Optional:    true,
+					},
+					"operator": {
+						Type:        schema.TypeString,
+						Description: "",
+						Optional:    true,
+					},
+					"toleration_seconds": {
+						Type:        schema.TypeInt,
+						Description: "",
+						Optional:    true,
+						Default: -1,
+					},
+					"value": {
+						Type:        schema.TypeString,
+						Description: "",
+						Optional:    true,
+					},
+				},
+			},
+		},
 	}
 
 	if !isUpdatable {
